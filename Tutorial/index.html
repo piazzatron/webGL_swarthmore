@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My WebGL Page</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="index.js"></script>
+
+	<script id="vertex-shader" type="notjs"> 
+		attribute vec4 a_position;
+
+		void main() {
+			gl_Position = a_position;
+		}
+	</script>
+	
+	<script id="fragment-shader" type="notjs"> 
+		precision mediump float;
+
+		void main() {
+			gl_FragColor = vec4(1, 0, 0.5, 1);
+		}
+	</script>
+</head>
+	<body onload="start()">
+		<canvas id="glCanvas" width="640" height="480">
+		</canvas>
+	</body>
+</html>
