@@ -1,4 +1,5 @@
 var gl;
+var NUM_TRIANGLES = 3;
 
 function start() {
 	console.log('Started up WebGL')
@@ -28,29 +29,15 @@ function start() {
 	var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
 
 	var program = createProgram(gl, vertexShader, fragmentShader);
-	
 	gl.useProgram(program);
+
 	// Add some points
 	var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
 
 	var positionBuffer = gl.createBuffer(); // Create a buffer
 	gl.enableVertexAttribArray(positionAttributeLocation);
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // Bind it to the ARRAY BUFFER target
-
-	var positions = [
-	  0, 0,
-	  0, 0.5,
-	  0.7, 0,
-	];
-
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-	// Rendering code
-	// Set the viewport
-
-
-
-
+	
 	// Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
 	var size = 2;          // 2 components per iteration
 	var type = gl.FLOAT;   // the data is 32bit floats
@@ -60,16 +47,36 @@ function start() {
 	gl.vertexAttribPointer(
     positionAttributeLocation, size, type, normalize, stride, offset);
 
-	draw();
+	draw(program);
 
 	console.log('Finished');
 }
 
-function draw() {
-	var primitiveType = gl.TRIANGLES;
+function randrange(min, max) {
+	return min + (Math.random() * (max - min)); 
+}
+
+function createRect() {
+	var positions = [];
+	for (var i = 0; i < 3 * 2; i++) {
+		positions.push(randrange(-1, 1));
+	}
+	return positions;
+}
+
+function draw(program) {
+	var primitiveType = gl.TRIANGLE_STRIP;
 	var offset = 0;
-	var count = 3;
-	gl.drawArrays(primitiveType, offset, count);
+	var u_color_location = gl.getUniformLocation(program, "u_color");
+
+
+	for (var i = 0; i < NUM_TRIANGLES; i++) {
+		var positions = createRect();
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+		gl.drawArrays(primitiveType, offset, 3);
+		gl.uniform4f(u_color_location, Math.random(), Math.random(), Math.random(), 1);
+	}
+
 	console.log("Finished drawing");
 }
 
