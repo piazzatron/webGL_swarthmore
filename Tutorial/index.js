@@ -29,29 +29,43 @@ function start() {
 	var program = createProgram(gl, vertexShader, fragmentShader);
 	gl.useProgram(program);
 
-	// Add some points
-	var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-
+	// Setup buffers
 	var positionBuffer = gl.createBuffer(); // Create a buffer
-	gl.enableVertexAttribArray(positionAttributeLocation);
-	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // Bind it to the ARRAY BUFFER target
+	var colorBuffer = gl.createBuffer();
 
-	// Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-	var size = 2;          // 2 components per iteration
-	var type = gl.FLOAT;   // the data is 32bit floats
-	var normalize = false; // don't normalize the data
-	var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-	var offset = 0;        // start at the beginning of the buffer
-	gl.vertexAttribPointer(
-    positionAttributeLocation, size, type, normalize, stride, offset);
+	// Load data into buffers
+	setupGeo(positionBuffer);
+	setupColors(colorBuffer);
 
-	draw(program);
+	// Draw it
+	draw(program, positionBuffer, colorBuffer);
 
 	console.log('Finished');
 }
 
 function randrange(min, max) {
 	return min + (Math.random() * (max - min)); 
+}
+
+function setupGeo(posBuffer) {
+	gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+	var positions = [];
+
+	for (var i = 0; i < NUM_TRIANGLES; i++) {
+		positions = positions.concat(createRect());
+	}
+	console.log("Positions:" + positions);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+}
+
+function setupColors(colorBuffer) {
+	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+	var colors = [];
+	for (var i = 0; i < NUM_TRIANGLES * 3; i++) {
+		colors = colors.concat([Math.random(), Math.random(), Math.random(), 1.0]);
+	}
+	console.log("Colors:" + colors);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 }
 
 function createRect() {
@@ -62,15 +76,29 @@ function createRect() {
 	return positions;
 }
 
-function draw(program) {
+function draw(program, posBuffer, colorBuffer) {
 	var primitiveType = gl.TRIANGLE_STRIP;
 	var offset = 0;
 
-	for (var i = 0; i < NUM_TRIANGLES; i++) {
-		var positions = createRect();
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-		gl.drawArrays(primitiveType, offset, 3);
-	}
+	// Position
+	// Get the location of position attribute
+	var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+	// Enable the array for drawing
+	gl.enableVertexAttribArray(positionAttributeLocation);
+	// Bind it to the ARRAY BUFFER target
+	gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer); 
+	// Tell openGL how to interpret the array + also bind the array to the attribute
+	gl.vertexAttribPointer(
+    positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Color
+    var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+    gl.enableVertexAttribArray(colorAttributeLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.vertexAttribPointer(colorAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+
+    // Draw them!
+	gl.drawArrays(primitiveType, offset, NUM_TRIANGLES * 3);
 
 	console.log("Finished drawing");
 }
