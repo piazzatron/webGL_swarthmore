@@ -24,10 +24,8 @@ function start() {
 	// Init some shaders
 	var vertexShaderSource = $('#vertex-shader')[0].text;
 	var fragmentShaderSource = $('#fragment-shader')[0].text;
-
 	var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
 	var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
 	var program = createProgram(gl, vertexShader, fragmentShader);
 	gl.useProgram(program);
 
@@ -37,7 +35,7 @@ function start() {
 	var positionBuffer = gl.createBuffer(); // Create a buffer
 	gl.enableVertexAttribArray(positionAttributeLocation);
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // Bind it to the ARRAY BUFFER target
-	
+
 	// Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
 	var size = 2;          // 2 components per iteration
 	var type = gl.FLOAT;   // the data is 32bit floats
@@ -67,14 +65,11 @@ function createRect() {
 function draw(program) {
 	var primitiveType = gl.TRIANGLE_STRIP;
 	var offset = 0;
-	var u_color_location = gl.getUniformLocation(program, "u_color");
-
 
 	for (var i = 0; i < NUM_TRIANGLES; i++) {
 		var positions = createRect();
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 		gl.drawArrays(primitiveType, offset, 3);
-		gl.uniform4f(u_color_location, Math.random(), Math.random(), Math.random(), 1);
 	}
 
 	console.log("Finished drawing");
