@@ -1,5 +1,18 @@
-var gl;
 var NUM_TRIANGLES = 3;
+var FOV = 45;
+var NEAR = 0.01;
+var FAR = 10;
+var OBJ_TRANSLATION = [0, 0, -4];
+
+var gl;
+var vertexBuffer;
+var colorBuffer;
+var program;
+var mvMatrix = mat4.create();
+var pMatrix = mat4.create();
+var tMatrix = mat4.create();
+var tInv = mat4.create();
+
 
 function start() {
 	console.log('Started up WebGL')
@@ -17,7 +30,7 @@ function start() {
 	// Enable depth testing
 	gl.enable(gl.DEPTH_TEST);
 	// Near things obscure far things
-	gl.depthFunc(gl.LEQUAL);
+	gl.depthFunc(gl.LEQUAL	);
 	// Clear the color as well as the depth buffer.
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -26,19 +39,29 @@ function start() {
 	var fragmentShaderSource = $('#fragment-shader')[0].text;
 	var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
 	var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-	var program = createProgram(gl, vertexShader, fragmentShader);
+	program = createProgram(gl, vertexShader, fragmentShader);
 	gl.useProgram(program);
 
+	// Set the perspective matrix
+	mat4.perspective(pMatrix, FOV, gl.canvas.width/gl.canvas.height, NEAR, FAR);
+	pMatrixLoc = gl.getUniformLocation(program, "pMatrix");
+	gl.uniformMatrix4fv(pMatrixLoc, false, pMatrix);
+
+	// Translate the object
+	mat4.translate(tMatrix, tMatrix, OBJ_TRANSLATION);
+	mat4.invert(tInv, tMatrix);
+	mat4.multiply(mvMatrix, mvMatrix, tMatrix);
+
 	// Setup buffers
-	var positionBuffer = gl.createBuffer(); // Create a buffer
-	var colorBuffer = gl.createBuffer();
+	vertexBuffer = gl.createBuffer(); // Create a buffer
+	colorBuffer = gl.createBuffer();
 
 	// Load data into buffers
-	setupGeo(positionBuffer);
-	setupColors(colorBuffer);
+	setupGeo();
+	setupColors();
 
 	// Draw it
-	draw(program, positionBuffer, colorBuffer);
+	render();
 
 	console.log('Finished');
 }
@@ -47,18 +70,19 @@ function randrange(min, max) {
 	return min + (Math.random() * (max - min)); 
 }
 
-function setupGeo(posBuffer) {
-	gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+function setupGeo() {
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 	var positions = [];
 
 	for (var i = 0; i < NUM_TRIANGLES; i++) {
 		positions = positions.concat(createRect());
 	}
+
 	console.log("Positions:" + positions);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 }
 
-function setupColors(colorBuffer) {
+function setupColors() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 	var colors = [];
 	for (var i = 0; i < NUM_TRIANGLES * 3; i++) {
@@ -70,13 +94,17 @@ function setupColors(colorBuffer) {
 
 function createRect() {
 	var positions = [];
-	for (var i = 0; i < 3 * 2; i++) {
+	var coords = 3;
+	var numPoints = 3;
+	for (var i = 0; i < numPoints; i++) {
+		positions.push(randrange(-1, 1));
+		positions.push(randrange(-1, 1));
 		positions.push(randrange(-1, 1));
 	}
 	return positions;
 }
 
-function draw(program, posBuffer, colorBuffer) {
+function draw() {
 	var primitiveType = gl.TRIANGLE_STRIP;
 	var offset = 0;
 
@@ -86,10 +114,10 @@ function draw(program, posBuffer, colorBuffer) {
 	// Enable the array for drawing
 	gl.enableVertexAttribArray(positionAttributeLocation);
 	// Bind it to the ARRAY BUFFER target
-	gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer); 
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); 
 	// Tell openGL how to interpret the array + also bind the array to the attribute
 	gl.vertexAttribPointer(
-    positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+    positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
 
     // Color
     var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
@@ -101,6 +129,22 @@ function draw(program, posBuffer, colorBuffer) {
 	gl.drawArrays(primitiveType, offset, NUM_TRIANGLES * 3);
 
 	console.log("Finished drawing");
+}
+
+function render() {
+	requestAnimFrame(render);
+	// TODO: Move this outside render
+	// TODO: Have this rotating around itself - either give it an offset, or offset the camera
+
+	mat4.multiply(mvMatrix, mvMatrix, tInv);
+	mat4.multiply(mvMatrix, mvMatrix, tMatrix);
+	mat4.rotateY(mvMatrix, mvMatrix, 0.1);
+
+	// Translate
+
+	var uMVLocation = gl.getUniformLocation(program, "uMVMatrix");
+	gl.uniformMatrix4fv(uMVLocation, false, mvMatrix);
+	draw();
 }
 
 function initWebGL(canvas) {
