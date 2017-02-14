@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My WebGL Page</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="../webgl-utils.js"></script>
+	<script src="../glmatrix-min.js"></script>
+	<script src="index.js"></script>
+
+	<script id="vertex-shader" type="notjs"> 
+		attribute vec3 a_position;
+		attribute vec3 a_normal;
+
+		float DIFFUSE = 1.0;
+		float AMBIENT = 1.0;
+		float SPECULAR = 1.0;
+		float SHININESS = 4.0;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 pMatrix;
+
+		varying vec4 v_color;
+
+		// TODO: Unhardcode these
+		vec4 ambient = vec4(0.1, 0.0, 0.4, 1.0); 
+		vec4 diffuse = vec4(0.8, 0.0, 0.1, 1.0);
+		vec4 lightPos = vec4(3.0, 4, 0, 1.0);
+
+		void main() {
+			gl_PointSize = 22.0;
+
+			vec4 a_posHomog = vec4(a_position.xyz, 1);
+			vec4 cameraLoc = vec4(0, 0, 0, 1); // Unhardcode this eventually
+
+			// Normal Vector
+			vec4 transformed_normal = normalize(uMVMatrix * vec4(a_normal, 0));
+
+			// View vector 
+			vec4 viewDir = normalize(cameraLoc - (uMVMatrix * a_posHomog));
+
+			// Light Vector
+			vec4 lightVector = normalize((lightPos - uMVMatrix * a_posHomog));
+
+			// Diffuse
+			vec4 diffuse = vec4((dot(transformed_normal, lightVector) * diffuse.xyz), 1);
+			diffuse = max(vec4(0,0,0,0), diffuse);
+
+			// Reflected Light Vector
+			vec4 reflected = (2.0 * dot(lightVector, transformed_normal) * transformed_normal) - lightVector;
+			reflected = normalize(reflected);
+
+			// Specular
+			float spec = max(0.0, dot(reflected, viewDir)); 
+			spec = pow(spec, SHININESS);
+			vec4 specular = vec4(spec, spec, spec, 1);
+
+			// Not sure if the lightVector is pointing the right way...
+			v_color = (AMBIENT * ambient) + (DIFFUSE * diffuse) + (SPECULAR * specular);
+			v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
+
+			gl_Position = pMatrix * uMVMatrix * a_posHomog;
+		}
+	</script>
+	
+	<script id="fragment-shader" type="notjs"> 
+		precision mediump float;
+		varying vec4 v_color;
+
+		void main() {
+			gl_FragColor = v_color;
+		}
+	</script>
+</head>
+	<body onload="start()">
+		<canvas id="glCanvas" width="640" height="480">
+		</canvas>
+	</body>
+</html>

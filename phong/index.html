@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My WebGL Page</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="../webgl-utils.js"></script>
+	<script src="../glmatrix-min.js"></script>
+	<script src="index.js"></script>
+
+	<script id="vertex-shader" type="notjs"> 
+		attribute vec3 a_position;
+		attribute vec3 a_normal;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 pMatrix;
+
+		varying vec4 v_color;
+
+		vec4 color = vec4(1.0, 0.0, 1.0, 1.0);
+		vec4 lightPos = vec4(0.0, 0.0, 1.0, 1.0);
+
+		void main() {
+			vec4 lightVector = (lightPos - uMVMatrix * (vec4(a_position.xyz, 1)));
+			lightVector = normalize(lightVector);
+
+			vec4 transformed_normal = uMVMatrix * vec4(a_normal, 0); 
+			vec4 blendedColor = 0.6 * color + 0.4 * vec4(a_position.x, 0, a_position.y, 1); // blend colors
+			v_color = vec4((dot(transformed_normal, lightVector) * blendedColor.xyz), 1); // Calculate the color
+			// lighten the dark spots
+			v_color = max(vec4(0.1, 0.0, 0.1, 1), v_color);
+
+			gl_Position = pMatrix * uMVMatrix * vec4(a_position.xyz, 1);
+		}
+	</script>
+	
+	<script id="fragment-shader" type="notjs"> 
+		precision mediump float;
+		varying vec4 v_color;
+
+		void main() {
+			gl_FragColor = v_color;
+		}
+	</script>
+</head>
+	<body onload="start()">
+		<canvas id="glCanvas" width="640" height="480">
+		</canvas>
+	</body>
+</html>
