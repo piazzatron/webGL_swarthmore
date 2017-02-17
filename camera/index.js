@@ -30,9 +30,27 @@ var tMatrix = mat4.create();
 var cameraMatrix = mat4.create();
 var tInv = mat4.create();
 var previousLoc = {
-	x: 0,
-	y: 0
+	x: 300,
+	y: 250
 };
+
+function mouseHandler(ev) {
+	var scale = 0.001;
+	var dx = ev.clientX - previousLoc.x;
+	var dy = ev.clientY - previousLoc.y;
+	dx *= scale;
+	dy *= scale;
+	console.log(dx)
+	console.log(dy)
+
+	CAMERA_LOOK[0] += dx;
+	CAMERA_LOOK[1] -= dy;
+
+	previousLoc.x = ev.clientX;
+	previousLoc.y = ev.clientY;
+	
+	console.log(CAMERA_LOOK);
+}
 
 function Camera() {
 	this.translation = vec3.create();
@@ -50,26 +68,7 @@ function start() {
 
 	gl = initWebGL(canvas);
 
-	canvas.onmousemove = function(ev) {
-		var dx = ev.clientX - previousLoc.x;
-		var dy = ev.clientY - previousLoc.y;
-		dx *= 0.01;
-		dy *= 0.01;
-		console.log(dx)
-		console.log(dy)
-
-		CAMERA_LOOK[0] += dx;
-		CAMERA_LOOK[1] -= dy;
-
-		previousLoc.x = ev.clientx;
-		previousLoc.y = ev.clientY;
-		
-		console.log(CAMERA_LOOK);
-	// var x = ev.clientX;
-	// var y = ev.clientY;
-	// x *= (1.0/canvas.width);
-	// y *= (1.0/canvas.height);
-	}
+	canvas.onmousemove = mouseHandler;
 
 	if (!gl) {
 		return;
