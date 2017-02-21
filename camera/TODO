@@ -1,0 +1,10 @@
+TODO:
+	Get object drawing working
+	Get orbit cam working
+
+	
+	Make some code that compiles the shaders nicely
+	Make some code that deals with uniforms and positions/locations
+	Add color & position to objects
+	Implement lighting in code
+	Move to a utilites class
