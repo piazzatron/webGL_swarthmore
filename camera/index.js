@@ -45,6 +45,7 @@
       this.attrs = this.getAttrLocations(this.shader, ['a_position', 'a_normal']);
       this.translation = vec3.create();
       this.rotation = vec3.create();
+      this.velocity = vec3.create();
       console.log(this.vertexBufferInfo)
     }
 
@@ -89,7 +90,7 @@
     }
 
     update() {
-      this.position += this.velocity;
+      vec3.add(this.translation, this.translation, this.velocity);
     }
   }
 
@@ -102,12 +103,12 @@
   }
 
   class Sphere extends Drawable {
-    constructor(gl, shader, h_step, v_step) {
+    constructor(gl, shader, h_step, v_step, translation, rotation, velocity) {
       const sphere = Sphere.createGeo(h_step, v_step);
       const vertexInfo = new BufferInfo(gl, sphere, sphere.length/3);
       const normalInfo = new BufferInfo(gl, sphere, sphere.length/3);
       const uniforms = ["a_position", "a_normal"];
-      super(gl, shader, vertexInfo, vertexInfo, uniforms); 
+      super(gl, shader, vertexInfo, vertexInfo, uniforms, translation, rotation, velocity); 
     }
 
     static createGeo(h_step, v_step) {
@@ -131,7 +132,7 @@
   }
 
   class Camera {
-    constructor(translation, look, velocity = [0,0,0.02]) {
+    constructor(translation, look, velocity = [0, 0, 0]) {
       this.translation = vec3.create();
       this.lookAt = vec3.create();
       this.up = vec3.create();
@@ -193,8 +194,6 @@
 
     gl = initWebGL(canvas);
 
-    // canvas.onmousemove = mouseHandler;
-
     if (!gl) {
       return;
     }
@@ -221,14 +220,19 @@
     // Create the camera
     camera = new Camera(CAMERA_TRANSLATION, CAMERA_LOOK);
 
-    document.onmousedown = handleMouseDown;
-
+    
+    setupHandlers();
     setupGeo(gl);
 
     // Draw it
     render();
 
     console.log('Finished');
+  }
+
+  function setupHandlers() {
+    canvas.onmousemove = mouseHandler;
+    canvas.onmousedown = handleMouseDown;
   }
 
   function handleMouseDown(event) {
@@ -289,17 +293,13 @@
   }
 
   function mouseHandler(ev) {
-    var scale = 0.001;
-    var dx = ev.clientX - previousLoc.x;
-    var dy = ev.clientY - previousLoc.y;
-    dx *= scale;
-    dy *= scale;
+    const scale = 0.01;
+    let offsetX = (ev.clientX - canvas.width/2.0) / (canvas.width/2.0);
+    let offsetY = (canvas.height/2.0 - ev.clientY) / (canvas.height/2.0);
+    offsetX *= (Math.PI / 2);
+    offsetY *= (Math.PI / 2);
 
-    CAMERA_LOOK[0] += dx;
-    CAMERA_LOOK[1] -= dy;
-
-    previousLoc.x = ev.clientX;
-    previousLoc.y = ev.clientY;
-    
-    console.log(CAMERA_LOOK);
+    camera.position[0] = Math.sin(offsetX) * 3.0;
+    camera.position[1] = Math.sin(offsetY) * 3.0;
+    camera.position[2] = Math.cos(offsetX) * 3.0;
 }

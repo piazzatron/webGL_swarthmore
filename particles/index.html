@@ -4,7 +4,9 @@
 	<title>My WebGL Page</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	<script src="../lib/webgl-utils.js"></script>
+	<script src="../lib/utils.js"></script>
 	<script src="../lib/glmatrix-min.js"></script>
+	<script src="../lib/objects.js"></script>
 	<script src="index.js"></script>
 
 	<script id="vertex-shader" type="notjs"> 
@@ -18,6 +20,7 @@
 
 		uniform mat4 u_mvMatrix;
 		uniform mat4 u_pMatrix;
+		uniform float u_density;
 
 		varying vec4 v_color;
 
@@ -27,7 +30,7 @@
 		vec4 lightPos = vec4(3.0, 4, 0, 1.0);
 
 		void main() {
-			gl_PointSize = 20.0;
+			gl_PointSize = 5.0;
 
 			vec4 a_posHomog = vec4(a_position.xyz, 1);
 			vec4 cameraLoc = vec4(0, 0, 0, 1); // Unhardcode this eventually
@@ -56,7 +59,8 @@
 
 			// Not sure if the lightVector is pointing the right way...
 			v_color = (AMBIENT * ambient) + (DIFFUSE * diffuse) + (SPECULAR * specular);
-			v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
+			// v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
+			v_color = vec4(u_density, 0, 0, 1);
 
 			gl_Position = u_pMatrix * u_mvMatrix * a_posHomog;
 		}
