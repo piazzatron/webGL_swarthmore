@@ -19,13 +19,13 @@ const FAR = 200;
 const MAX_KERNAL_DIST = 2; // If this is < 1, it gets weird...
 const C = 315.0 / (64 * Math.PI * Math.pow(MAX_KERNAL_DIST, 9));
 const C2 = (45/(Math.PI * Math.pow(MAX_KERNAL_DIST,6)));
-const GRAVITY = 300; // 100
+const GRAVITY = 0; // 100
 const WALL_REPULSION = 0.0; //0.01;
 const WALLS = [[SCALE,0,0], [0,SCALE,0], [0,0,SCALE], [-SCALE,0,0], [0,-SCALE/10,0], [0,0,-SCALE]];
-const DAMPENING = 0.1;
+const DAMPENING = 0.7; // Energy lost to wall repel
 const WALL_THRESH = 0.25; // Closeness to trigger wall repel
 const REST_DENSITY = 100;
-const PRESSURE_CONSTANT = 0.5;
+const PRESSURE_CONSTANT = 1;
 const NORMALIZE_DENSITY = false;
 const THREE_D = false;
 let MASS = 1;
@@ -136,20 +136,24 @@ function calculateAccelerations() {
       vec3.sub(dir, objects[i].position, objects[j].position);
       let r = vec3.length(dir);
 
-
       // Compute pressure
-      let pressure_scalar =  MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
-      let pressure = vec3.create();
-      vec3.scale(pressure, dir, pressure_scalar);
-      vec3.add(objects[i].acceleration, objects[i].acceleration, pressure);      
+      let p_x = -1 * dir[0]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
+      let p_y = -1 * dir[1]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
+      let p_z = -1 * dir[2]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
+      
+      objects[i].acceleration[0] += p_x;
+      objects[i].acceleration[1] += p_y;
+      objects[i].acceleration[2] += p_z;
 
       // Compute viscosity
-      let v_diff = vec3.create();
-      vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
-      let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
-      let viscosity = vec3.create();
-      vec3.scale(viscosity, v_diff, v_scalar);
-      vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);      
+      // let v_diff = vec3.create();
+      // vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
+      // let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
+      // let viscosity = vec3.create();
+      // vec3.scale(viscosity, v_diff, v_scalar);
+      // vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);    
+
+      // vec3.scale(objects[i].acceleration, 1/objects[i].density);  
     }
   }
 }
