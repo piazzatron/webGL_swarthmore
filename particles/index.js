@@ -146,15 +146,14 @@ function calculateAccelerations() {
       objects[i].acceleration[2] += p_z;
 
       // Compute viscosity
-      // let v_diff = vec3.create();
-      // vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
-      // let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
-      // let viscosity = vec3.create();
-      // vec3.scale(viscosity, v_diff, v_scalar);
-      // vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);    
-
-      // vec3.scale(objects[i].acceleration, 1/objects[i].density);  
+      let v_diff = vec3.create();
+      vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
+      let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
+      let viscosity = vec3.create();
+      vec3.scale(viscosity, v_diff, v_scalar);
+      vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);    
     }
+    vec3.scale(objects[i].acceleration, objects[i].acceleration, 1/objects[i].density);  
   }
 }
 
