@@ -11,25 +11,26 @@
 // How to deal w/settling
 // Pressure! How to get gradient so we incorporate direction?
 
-const NUM_PARTICLES = 200;
+const NUM_PARTICLES = 350;
 const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
 const MAX_KERNAL_DIST = 2; // If this is < 1, it gets weird...
-const C = 315.0 / (64 * Math.PI * Math.pow(MAX_KERNAL_DIST, 9));
-const C2 = (45/(Math.PI * Math.pow(MAX_KERNAL_DIST,6)));
-const GRAVITY = 100; // 100
+const C = 315.0 / (64 * Math.PI * Math.pow(MAX_KERNAL_DIST, 9)); // DENSITY
+const C2 = (45/(Math.PI * Math.pow(MAX_KERNAL_DIST, 6))); // VISCOSITY
+const C3 = (-45/(Math.PI * Math.pow(MAX_KERNAL_DIST,6))) // PRESSURE
+const GRAVITY = 500; // 100
 const WALL_REPULSION = 0.0; //0.01;
 const WALLS = [[SCALE,0,0], [0,SCALE,0], [0,0,SCALE], [-SCALE,0,0], [0,-SCALE/10,0], [0,0,-SCALE]];
-const DAMPENING = 0.7; // Energy lost to wall repel
+const DAMPENING = 0.6; // was 0.6 Energy lost to wall repel
 const WALL_THRESH = 0.25; // Closeness to trigger wall repel
 const REST_DENSITY = 100;
-const PRESSURE_CONSTANT = 1;
-const NORMALIZE_DENSITY = false;
+const NORMALIZE_DENSITY = true;
 const THREE_D = false;
 let MASS = 1;
-const MU = 0.1;
+const PRESSURE_CONSTANT = 10; // was 1.0
+const MU = 10; // WAS 1.0
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -124,10 +125,7 @@ function calculateAccelerations() {
     vec3.add(objects[i].acceleration, objects[i].acceleration, acceleration);
 
     // Pressure
-    for (var j = 0; j < objects.length; j++) {
-      if(j == i){
-        continue;
-      }
+    for (var j = i + 1; j < objects.length; j++) {
 
       let PRESSURE_I = PRESSURE_CONSTANT * (objects[i].density - REST_DENSITY);
       let PRESSURE_J = PRESSURE_CONSTANT * (objects[j].density - REST_DENSITY);
@@ -145,20 +143,26 @@ function calculateAccelerations() {
       objects[i].acceleration[1] += p_y;
       objects[i].acceleration[2] += p_z;
 
+      objects[j].acceleration[0] -= p_x;
+      objects[j].acceleration[1] -= p_y;
+      objects[j].acceleration[2] -= p_z;
+
       // Compute viscosity
       let v_diff = vec3.create();
       vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
       let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
       let viscosity = vec3.create();
       vec3.scale(viscosity, v_diff, v_scalar);
+
       vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);    
+      vec3.sub(objects[j].acceleration, objects[j].acceleration, viscosity);    
     }
     vec3.scale(objects[i].acceleration, objects[i].acceleration, 1/objects[i].density);  
   }
 }
 
 function densityKernel(r, h) {
-  if (Math.abs(r) > h) {
+  if (r > h) {
     return 0;
   }
 
@@ -166,19 +170,18 @@ function densityKernel(r, h) {
 }
 
 function viscosityKernel(r, h) {
-  if (Math.abs(r) > h) {
+  if (r > h) {
     return 0;
   }
-  // TODO: Store this as a constant
-  return  C2 * (h - Math.abs(r));
+  return  C2 * (h - r);
 }
 
 function pressureGradientKernel(r, h) {
-  if (Math.abs(r) > h) {
+  if (r > h) {
     return 0;
   }
 
-  return (-45/(Math.PI * Math.pow(h, 6))) * Math.pow((h - r), 3); 
+  return C3 * Math.pow((h - r), 3); 
 }
 
 function setupGeo(gl, shader) {
