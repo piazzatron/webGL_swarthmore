@@ -1,0 +1,22 @@
+NOTE: C2 and C3 are the same... why??
+
+Question for Aline - bouncing off the walls is breaking it?
+
+There's no lateral force – objects don't 'slip' past eachother. This must be a bug, no? All the particles are perfectly above on another, and the pressure forces only act in that direction
+
+Am I doing viscosity correctly?
+When I took out the -1 in pressure, it made more sense...
+What is Q? In the condensed interactino force expressions
+TODO: normalize forces again
+
+
+Questions:
+
+How to get the gradient? Is it what I see in polar coordintes on wolfram?
+MAX_KERNAL_DISTANCE (h) is weird if it's < 1, but 1 seems large?
+Calculate density should return a scalar, but we sum over the vector components?
+Pressure: When something is on the same Y coordinate, they scoot away from eachother b/c the kernel is nonzero at 0 and 
+
+I'm following the paper and using the mean of the two particles, rather than simply adding to one and subtracting from the other, b/c they have different densities ya?
+
+What if density - restDensity < 0?

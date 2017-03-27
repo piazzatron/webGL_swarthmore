@@ -1,0 +1,24 @@
+NOTE: C2 and C3 are the same... why?
+
+Question for Aline - bouncing off the walls is breaking it?
+
+There's no lateral force – objects don't 'slip' past eachother. This must be a bug, no? All the particles are perfectly above on another, and the pressure forces only act in that direction
+
+
+Draw boundary of box
+User forces
+Enable transparency
+Consider pulling kernels out into update
+pull r > h out
+disappearing particles?
+
+possible
+-------
+3js, draw a sphere 
+
+next
+-------
+perlin noise generating height maps, or sum of sins
+different colors based on heights, heightmap
+Book: Algorithmic Beauty of Plants
+Research generative algorithms for terrain/organic objects

@@ -18,32 +18,33 @@
 		float SPECULAR = 1.0;
 		float SHININESS = 50.0;
 
-		uniform mat4 u_mvMatrix;
+		uniform mat4 u_mMatrix;
+		uniform mat4 u_vMatrix;
 		uniform mat4 u_sMatrix;
 		uniform mat4 u_pMatrix;
 		uniform float u_density;
 
 		varying vec4 v_color;
 
-		// TODO: Unhardcode these
+		mat4 mvMatrix;
 		vec4 ambient = vec4(0.1, 0.0, 0.4, 1.0); 
 		vec4 diffuse = vec4(0.0, 1.0, 0.0, 1.0);
 		vec4 lightPos = vec4(3.0, 4, 0, 1.0);
 
 		void main() {
 			gl_PointSize = 5.0;
-
+			mvMatrix = u_vMatrix * u_mMatrix;
 			vec4 a_posHomog = vec4(a_position.xyz, 1);
 			vec4 cameraLoc = vec4(0, 0, 0, 1); // Unhardcode this eventually
 
 			// Normal Vector
-			vec4 transformed_normal = normalize(u_mvMatrix * vec4(a_normal, 0));
+			vec4 transformed_normal = normalize(mvMatrix * vec4(a_normal, 0));
 
 			// View vector 
-			vec4 viewDir = normalize(cameraLoc - (u_mvMatrix * a_posHomog));
+			vec4 viewDir = normalize(cameraLoc - (mvMatrix * a_posHomog));
 
 			// Light Vector
-			vec4 lightVector = normalize((lightPos - u_mvMatrix * a_posHomog));
+			vec4 lightVector = normalize((lightPos - mvMatrix * a_posHomog));
 
 			// Diffuse
 			vec4 diffuse = vec4((dot(transformed_normal, lightVector) * diffuse.xyz), 1);
@@ -63,7 +64,7 @@
 			// v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
 			v_color = vec4(u_density, 0, 0, 1);
 
-			gl_Position = u_pMatrix * u_mvMatrix * a_posHomog;
+			gl_Position = u_pMatrix * mvMatrix * a_posHomog;
 		}
 	</script>
 	
@@ -79,5 +80,6 @@
 	<body onload="start()">
 		<canvas id="glCanvas" width="640" height="480">
 		</canvas>
+		<canvas id="text"></canvas>
 	</body>
 </html>

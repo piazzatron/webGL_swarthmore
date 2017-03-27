@@ -40,7 +40,10 @@ let PAUSE = false;
 let CLEAR_COLOR = [0.9, 0.6, 0.0, 1.0];
 
 let gl;
+let dt = 1;
+let lastTime = Date.now();
 let canvas;
+let textCtx;
 let lights;
 let program;
 let camera;
@@ -50,12 +53,20 @@ let sMatrix = mat4.create();
 
 function draw() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  
+  textCtx.clearRect(0, 0, textCtx.canvas.width, textCtx.canvas.height);
+  textCtx.fillText(`${1/dt} FPS`, 20 , 10);
+  
   for (var object of objects) {
     object.draw(gl, camera);
   }
 }
 
 function update() {
+  let currTime = Date.now() / 1000;
+  dt = currTime - lastTime;
+  lastTime = currTime;
+
   camera.update();
   resetAttributes();
   computeDensities();
@@ -211,6 +222,8 @@ function start() {
   // TODO: Remove extraneous stuff from this function
   console.log('Started up WebGL');
   canvas = $('#glCanvas')[0];
+  let text = $('#text')[0];
+  textCtx = text.getContext('2d');
 
   gl = initWebGL(canvas);
 
