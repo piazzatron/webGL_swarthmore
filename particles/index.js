@@ -11,7 +11,7 @@
 // How to deal w/settling
 // Pressure! How to get gradient so we incorporate direction?
 
-const NUM_PARTICLES = 350;
+const NUM_PARTICLES = 600;
 const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
@@ -23,14 +23,15 @@ const C3 = (-45/(Math.PI * Math.pow(MAX_KERNAL_DIST,6))) // PRESSURE
 const GRAVITY = 500; // 100
 const WALL_REPULSION = 0.0; //0.01;
 const WALLS = [[SCALE,0,0], [0,SCALE,0], [0,0,SCALE], [-SCALE,0,0], [0,-SCALE/10,0], [0,0,-SCALE]];
-const DAMPENING = 0.6; // was 0.6 Energy lost to wall repel
+const DAMPENING = 0.9; // was 0.6 Energy lost to wall repel
 const WALL_THRESH = 0.25; // Closeness to trigger wall repel
 const REST_DENSITY = 100;
 const NORMALIZE_DENSITY = true;
-const THREE_D = false;
+const THREE_D = 0;
 let MASS = 1;
 const PRESSURE_CONSTANT = 10; // was 1.0
-const MU = 10; // WAS 1.0
+const MU = 50; // WAS 1.0
+const WALL_DIST = 15;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -48,6 +49,7 @@ let lights;
 let program;
 let camera;
 let objects = [];
+let lines = [];
 let pMatrix = mat4.create();
 let sMatrix = mat4.create();
 
@@ -59,6 +61,10 @@ function draw() {
   
   for (var object of objects) {
     object.draw(gl, camera);
+  }
+
+  for (var line of lines) {
+    line.draw(gl, camera);
   }
 }
 
@@ -80,16 +86,23 @@ function update() {
 function resetAttributes() {
   for (var i = 0; i < objects.length; i++) {
     objects[i].density = 0;
-    objects[i].acceleration = [0, 0, 0];
+    vec3.set(objects[i].acceleration, 0, 0, 0);
   }
 }
 
 function computeDensities() {
+  // TODO: symetricize this
   for (var i = 0; i < objects.length; i++) {
-    for (var j = 0; j < objects.length; j++) {
-      let distance = vec3.distance(objects[j].position, objects[i].position); // Is this right?
-      let densityContribution = MASS * densityKernel(distance, MAX_KERNAL_DIST);
-      objects[i].density += densityContribution;
+    for (var j = i; j < objects.length; j++) {
+      // if (i == j){ continue;} // QUESTION: Why does not computing self density lead to instability?
+
+      let distance = vec3.distance(objects[j].position, objects[i].position);
+       // Is this right?
+      if (distance <= MAX_KERNAL_DIST) {
+        let densityContribution = MASS * densityKernel(distance, MAX_KERNAL_DIST);
+        objects[i].density += densityContribution;
+        objects[j].density += densityContribution;
+      }
     }
   }
 }
@@ -109,64 +122,51 @@ function normalizeDensity() {
 }
 
 function calculateAccelerations() {
+  let dir = vec3.create();
+  let viscosity = vec3.create();
+  let v_diff = vec3.create();
+  let acceleration = vec3.create();
+
   for (var i = 0; i < objects.length; i++) {
-    let acceleration = vec3.create();
+    vec3.set(acceleration, 0,0,0);
 
     // Add Gravity
-    acceleration[1] -= GRAVITY;
-
-    // Wall Collisions
-    for (var wall of WALLS) {
-      let wall_vec = vec3.create();
-      let wall_norm = vec3.create();
-      let force = vec3.create();
-
-      vec3.set(wall_vec, wall[0], wall[1], wall[2]);
-      let dist = vec3.distance(objects[i].position, wall_vec);
-      let velocityCheck = vec3.dot(wall_norm, objects[i].velocity);
-
-      if (dist < WALL_THRESH && velocityCheck < 0) {
-        vec3.scale(wall_norm, wall_vec, -1);
-
-        // Set the force
-        vec3.scale(force, wall_norm, WALL_REPULSION/dist);
-        vec3.add(acceleration, acceleration, force);
-      }
-    }
-    vec3.add(objects[i].acceleration, objects[i].acceleration, acceleration);
+    objects[i].acceleration[1] -= GRAVITY;
 
     // Pressure
     for (var j = i + 1; j < objects.length; j++) {
-
-      let PRESSURE_I = PRESSURE_CONSTANT * (objects[i].density - REST_DENSITY);
-      let PRESSURE_J = PRESSURE_CONSTANT * (objects[j].density - REST_DENSITY);
-      let dir = vec3.create();
+      vec3.set(dir, 0, 0, 0);
+      vec3.set(viscosity, 0, 0, 0);
+      vec3.set(v_diff, 0, 0, 0);
 
       vec3.sub(dir, objects[i].position, objects[j].position);
       let r = vec3.length(dir);
 
       // Compute pressure
-      let p_x = -1 * dir[0]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
-      let p_y = -1 * dir[1]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
-      let p_z = -1 * dir[2]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
-      
-      objects[i].acceleration[0] += p_x;
-      objects[i].acceleration[1] += p_y;
-      objects[i].acceleration[2] += p_z;
+      if (r <= MAX_KERNAL_DIST) {
+        let PRESSURE_I = PRESSURE_CONSTANT * (objects[i].density - REST_DENSITY);
+        let PRESSURE_J = PRESSURE_CONSTANT * (objects[j].density - REST_DENSITY);
 
-      objects[j].acceleration[0] -= p_x;
-      objects[j].acceleration[1] -= p_y;
-      objects[j].acceleration[2] -= p_z;
+        let p_x = -1 * dir[0]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
+        let p_y = -1 * dir[1]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
+        let p_z = -1 * dir[2]/r * MASS * (PRESSURE_J + PRESSURE_I) / (2 * objects[j].density) * pressureGradientKernel(r, MAX_KERNAL_DIST);
+        
+        objects[i].acceleration[0] += p_x;
+        objects[i].acceleration[1] += p_y;
+        objects[i].acceleration[2] += p_z;
 
-      // Compute viscosity
-      let v_diff = vec3.create();
-      vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
-      let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
-      let viscosity = vec3.create();
-      vec3.scale(viscosity, v_diff, v_scalar);
+        objects[j].acceleration[0] -= p_x;
+        objects[j].acceleration[1] -= p_y;
+        objects[j].acceleration[2] -= p_z;
 
-      vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);    
-      vec3.sub(objects[j].acceleration, objects[j].acceleration, viscosity);    
+        // Compute viscosity
+        vec3.sub(v_diff, objects[j].velocity, objects[i].velocity);
+        let v_scalar = MU * MASS * (1/ objects[j].density)  * viscosityKernel(r, MAX_KERNAL_DIST);
+        vec3.scale(viscosity, v_diff, v_scalar);
+
+        vec3.add(objects[i].acceleration, objects[i].acceleration, viscosity);    
+        vec3.sub(objects[j].acceleration, objects[j].acceleration, viscosity); 
+        }
     }
     vec3.scale(objects[i].acceleration, objects[i].acceleration, 1/objects[i].density);  
   }
@@ -184,6 +184,7 @@ function viscosityKernel(r, h) {
   if (r > h) {
     return 0;
   }
+
   return  C2 * (h - r);
 }
 
@@ -209,7 +210,7 @@ function setupGeo(gl, shader) {
     }
   } else {
     for (let i = 0; i < NUM_PARTICLES; i++) {
-      let position = [(i % 10) * 0.5, Math.floor(i/10) * 0.5, 0];
+      let position = [(i % 20) * 0.35 - 5, Math.floor(i/20) * 0.35 - 5, 0];
       let velocity = [0,0,0];
       let p = new Particle(gl, shader, 1, position, velocity, [1,1,1,1]);
       objects.push(p);
@@ -255,6 +256,22 @@ function start() {
   camera = new Camera(CAMERA_TRANSLATION, CAMERA_LOOK);
 
   setupHandlers();
+  // Create lines
+  lines = [
+    new Line(gl, program, [-WALL_DIST, - 10, WALL_DIST, WALL_DIST, -10, WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, - 10, -WALL_DIST, WALL_DIST, -10, -WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, WALL_DIST, WALL_DIST, WALL_DIST, WALL_DIST, WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, WALL_DIST, -WALL_DIST, WALL_DIST, WALL_DIST, -WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, - 10, -WALL_DIST, -WALL_DIST, WALL_DIST, -WALL_DIST,]),
+    new Line(gl, program, [WALL_DIST, - 10, -WALL_DIST, WALL_DIST, WALL_DIST, -WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, - 10, WALL_DIST, -WALL_DIST, WALL_DIST, WALL_DIST]),
+    new Line(gl, program, [WALL_DIST, - 10, WALL_DIST, WALL_DIST, WALL_DIST, WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, - 10, WALL_DIST, -WALL_DIST, - 10, -WALL_DIST]),
+    new Line(gl, program, [WALL_DIST, - 10, WALL_DIST, WALL_DIST, - 10, -WALL_DIST]),
+    new Line(gl, program, [-WALL_DIST, WALL_DIST, WALL_DIST, -WALL_DIST, WALL_DIST, -WALL_DIST]),
+    new Line(gl, program, [WALL_DIST, WALL_DIST, WALL_DIST, WALL_DIST, WALL_DIST, -WALL_DIST]),
+  ]
+
   setupGeo(gl, program);
   if (NORMALIZE_DENSITY){
     normalizeDensity();
