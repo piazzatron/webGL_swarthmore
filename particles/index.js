@@ -16,22 +16,21 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const MAX_KERNAL_DIST = 2; // If this is < 1, it gets weird...
+const MAX_KERNAL_DIST = 1.5; // If this is < 1, it gets weird...
 const C = 315.0 / (64 * Math.PI * Math.pow(MAX_KERNAL_DIST, 9)); // DENSITY
 const C2 = (45/(Math.PI * Math.pow(MAX_KERNAL_DIST, 6))); // VISCOSITY
 const C3 = (-45/(Math.PI * Math.pow(MAX_KERNAL_DIST,6))) // PRESSURE
-const GRAVITY = 500; // 100
-const WALL_REPULSION = 0.0; //0.01;
-const WALLS = [[SCALE,0,0], [0,SCALE,0], [0,0,SCALE], [-SCALE,0,0], [0,-SCALE/10,0], [0,0,-SCALE]];
-const DAMPENING = 0.9; // was 0.6 Energy lost to wall repel
-const WALL_THRESH = 0.25; // Closeness to trigger wall repel
+const GRAVITY = 600; // 100
+const DAMPENING = 0.6; // was 0.6 Energy lost to wall repel
 const REST_DENSITY = 100;
-const NORMALIZE_DENSITY = true;
+const NORMALIZE_DENSITY = 1;
 const THREE_D = 0;
 let MASS = 1;
-const PRESSURE_CONSTANT = 10; // was 1.0
-const MU = 50; // WAS 1.0
-const WALL_DIST = 15;
+const PRESSURE_CONSTANT = 20; // was 1.0
+const MU = 80; // Basically springiness
+const WALL_DIST = 14;
+const SPACING = 1.0
+const TIME_STEP = 0.1;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -210,7 +209,7 @@ function setupGeo(gl, shader) {
     }
   } else {
     for (let i = 0; i < NUM_PARTICLES; i++) {
-      let position = [(i % 20) * 0.35 - 5, Math.floor(i/20) * 0.35 - 5, 0];
+      let position = [(i % 20) * SPACING - 5, Math.floor(i/20) * SPACING - 5, 0];
       let velocity = [0,0,0];
       let p = new Particle(gl, shader, 1, position, velocity, [1,1,1,1]);
       objects.push(p);
