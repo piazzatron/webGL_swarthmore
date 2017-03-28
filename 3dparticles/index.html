@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My WebGL Page</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="../lib/webgl-utils.js"></script>
+	<script src="../lib/utils.js"></script>
+	<script src="../lib/glmatrix-min.js"></script>
+	<script src="../lib/objects.js"></script>
+	<script src="index.js"></script>
+
+	<script id="vertex-shader" type="notjs"> 
+		attribute vec3 a_position;
+		attribute vec3 a_normal;
+
+		float DIFFUSE = 1.0;
+		float AMBIENT = 1.0;
+		float SPECULAR = 1.0;
+		float SHININESS = 50.0;
+
+		uniform mat4 u_mMatrix;
+		uniform mat4 u_vMatrix;
+		uniform mat4 u_sMatrix;
+		uniform mat4 u_pMatrix;
+		uniform float u_density;
+
+		varying vec4 v_color;
+
+		mat4 mvMatrix;
+		vec4 denseColor = vec4(0.2, 0.65, 0.7, 1);
+		vec4 sparseColor = vec4(0, 0.4, 0.5, 1);
+
+		void main() {
+			gl_PointSize = 8.0;
+			mvMatrix = u_vMatrix * u_mMatrix;
+			vec4 a_posHomog = vec4(a_position.xyz, 1);
+
+			// v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
+			float norm_density = (u_density/300.0);
+			v_color = norm_density * denseColor + (1.0 - norm_density) * sparseColor;
+
+			gl_Position = u_pMatrix * mvMatrix * a_posHomog;
+		}
+	</script>
+	
+	<script id="fragment-shader" type="notjs"> 
+		precision mediump float;
+		varying vec4 v_color;
+
+		void main() {
+			gl_FragColor = v_color;
+		}
+	</script>
+</head>
+	<body onload="start()">
+		<canvas id="glCanvas" width="640" height="480">
+		</canvas>
+		<canvas id="text"></canvas>
+	</body>
+</html>
