@@ -27,42 +27,17 @@
 		varying vec4 v_color;
 
 		mat4 mvMatrix;
-		vec4 ambient = vec4(0.1, 0.0, 0.4, 1.0); 
-		vec4 diffuse = vec4(0.0, 1.0, 0.0, 1.0);
-		vec4 lightPos = vec4(3.0, 4, 0, 1.0);
+		vec4 denseColor = vec4(0.2, 0.65, 0.7, 1);
+		vec4 sparseColor = vec4(0, 0.4, 0.5, 1);
 
 		void main() {
 			gl_PointSize = 5.0;
 			mvMatrix = u_vMatrix * u_mMatrix;
 			vec4 a_posHomog = vec4(a_position.xyz, 1);
-			vec4 cameraLoc = vec4(0, 0, 0, 1); // Unhardcode this eventually
 
-			// Normal Vector
-			vec4 transformed_normal = normalize(mvMatrix * vec4(a_normal, 0));
-
-			// View vector 
-			vec4 viewDir = normalize(cameraLoc - (mvMatrix * a_posHomog));
-
-			// Light Vector
-			vec4 lightVector = normalize((lightPos - mvMatrix * a_posHomog));
-
-			// Diffuse
-			vec4 diffuse = vec4((dot(transformed_normal, lightVector) * diffuse.xyz), 1);
-			diffuse = max(vec4(0,0,0,0), diffuse);
-
-			// Reflected Light Vector
-			vec4 reflected = (2.0 * dot(lightVector, transformed_normal) * transformed_normal) - lightVector;
-			reflected = normalize(reflected);
-
-			// Specular
-			float spec = max(0.0, dot(reflected, viewDir)); 
-			spec = pow(spec, SHININESS);
-			vec4 specular = vec4(spec, spec, spec, 1);
-
-			// Not sure if the lightVector is pointing the right way...
-			v_color = (AMBIENT * ambient) + (DIFFUSE * diffuse) + (SPECULAR * specular);
 			// v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
-			v_color = vec4(u_density, 0, 0, 1);
+			float norm_density = (u_density/300.0);
+			v_color = norm_density * denseColor + (1.0 - norm_density) * sparseColor;
 
 			gl_Position = u_pMatrix * mvMatrix * a_posHomog;
 		}

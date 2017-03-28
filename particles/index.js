@@ -11,7 +11,7 @@
 // How to deal w/settling
 // Pressure! How to get gradient so we incorporate direction?
 
-const NUM_PARTICLES = 600;
+const NUM_PARTICLES = 700;
 const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
@@ -28,16 +28,16 @@ const THREE_D = 0;
 let MASS = 1;
 const PRESSURE_CONSTANT = 20; // was 1.0
 const MU = 80; // Basically springiness
-const WALL_DIST = 14;
+const WALL_DIST = 13;
 const SPACING = 1.0
-const TIME_STEP = 0.1;
+const TIME_STEP = 0.08;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
 let CAMERA_TRANSLATION = [0, 0, 5];
 let CAMERA_LOOK = [0, 0, 0];
 let PAUSE = false;
-let CLEAR_COLOR = [0.9, 0.6, 0.0, 1.0];
+let CLEAR_COLOR = [1.0, 1.0, 1.0, 1.0, 1.0];
 
 let gl;
 let dt = 1;
