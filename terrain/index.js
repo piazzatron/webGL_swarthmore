@@ -83,7 +83,8 @@ function start() {
   if (!gl) {
     return;
   }
-
+  
+  gl.getExtension("EXT_frag_depth");
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
   gl.enable(gl.DEPTH_TEST);

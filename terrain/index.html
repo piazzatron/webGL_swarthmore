@@ -23,6 +23,7 @@
 		uniform mat4 u_pMatrix;
 
 		varying vec4 v_color;
+		varying vec4 v_position;
 
 		// TODO: Unhardcode these
 		mat4 mvMatrix;
@@ -32,8 +33,10 @@
 
 		void main() {
 			gl_PointSize = 22.0;
+			
 			mvMatrix = u_vMatrix * u_mMatrix;
 			vec4 a_posHomog = vec4(a_position.xyz, 1);
+
 			vec4 cameraLoc = vec4(0, 0, 0, 1); // Unhardcode this eventually
 
 			// Normal Vector
@@ -63,17 +66,23 @@
 			v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
 
 			gl_Position = u_pMatrix * mvMatrix * a_posHomog;
+			v_position = gl_Position;
 		}
 	</script>
 	
 	<script id="fragment-shader" type="notjs"> 
 		precision mediump float;
 		varying vec4 v_color;
+		varying vec4 v_position;
+		vec4 clearColor = vec4(0, 0, 0.5, 1.0);
 
 		void main() {
-			gl_FragColor = v_color;
+			// float alpha = 2.0 * (v_position.w/25.0 - 0.5);
+			float alpha = clamp(2.0 * (clamp(v_position.w/8.0, 0.0, 1.0) - 0.5), 0.0, 1.0);
+			gl_FragColor = (1.0 - alpha) * v_color + (alpha * clearColor);
 		}
 	</script>
+
 </head>
 	<body onload="start()">
 		<canvas id="glCanvas" width="640" height="480">
