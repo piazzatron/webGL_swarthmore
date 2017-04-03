@@ -4,6 +4,8 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
+const ROWS = 200;
+const COLS = 200;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -11,6 +13,7 @@ let CAMERA_TRANSLATION = [0, 0, 5];
 let CAMERA_LOOK = [0, 0, 0];
 let PAUSE = false;
 let CLEAR_COLOR = [0, 0, 0.5, 1.0];
+
 
 
 let gl;
@@ -56,19 +59,38 @@ function update() {
 
 function setupGeo(gl, shader) {
   let vertices = []
-  for (let i = 0; i < 200; i++) {
-    for (let j = 0; j < 200; j++) {
+  for (let i = 0; i < ROWS; i++) {
+    for (let j = 0; j < COLS; j++) {
       // Vertex1
-      vertices.push(j - 1);
+      vertices.push(j);
       vertices.push(0);
-      vertices.push(i - 1 );
+      vertices.push(i);
+
       // Vertex2
-      vertices.push(j - 1);
+      vertices.push(j);
       vertices.push(0);
-      vertices.push(i + 1 - 1);
+      vertices.push(i + 1);
+
+      // Insert 2 degenerate tris
+      if (j == COLS - 1) {
+        vertices.push(j);
+        vertices.push(0);
+        vertices.push(i + 1);
+
+        vertices.push(0);
+        vertices.push(0);
+        vertices.push(i + 1);
+      }
     }
   }
-  objects.push(new Mesh(gl, program, vertices));
+
+  objects.push(new Mesh(gl, program, vertices, [-COLS/2, 0, -ROWS/2]));
+}
+
+function calculateNormals(vertices) {
+  for (let i = 0; i < vertices.length; i += 3) {
+
+  }
 }
 
 function start() {
