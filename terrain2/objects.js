@@ -136,7 +136,7 @@ class Mesh extends Drawable {
 
   updateHeights(dt, offset) {
     for (let i = 0; i < this.vertices.length; i+=3) {
-      this.vertices[i+1] = Math.sin(this.vertices[i] + offset) * Math.cos(this.vertices[i+2] + offset);
+      this.vertices[i+1] = HEIGHT * Math.sin(this.vertices[i] + offset) * Math.cos(this.vertices[i+2] + offset);
     }
   }
 }

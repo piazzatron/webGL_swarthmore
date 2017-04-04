@@ -4,8 +4,10 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 200;
-const COLS = 200;
+const ROWS = 150;
+const COLS = 150;
+const HEIGHT = 2;
+const SPACING = 0.3
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -61,9 +63,9 @@ function createVertices() {
   let vertices = []
   for (let i = 0; i < ROWS; i++) {
     for (let j = 0; j < COLS; j++) {
-      vertices.push(j);
+      vertices.push(j * SPACING);
       vertices.push(0);
-      vertices.push(i);
+      vertices.push(i * SPACING);
     }
   }
   return vertices;
@@ -82,6 +84,7 @@ function getNormalForTri(v1, v2, v3) {
   vec3.set(s1, v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]);
   vec3.set(s2, v3[0] - v2[0], v3[1] - v2[1], v3[2] - v2[2]);
   vec3.cross(c1, s1, s2);
+  vec3.normalize(c1, c1);
   return c1;
 }
 
@@ -91,7 +94,7 @@ function calculateNormals(vertices) {
   let v3 = vec3.create();
 
   function getIndex(row, col) {
-    return row * COLS + (col * 3);
+    return row * (COLS) * 3 + (col * 3);
   }
 
   let normals = []
@@ -182,7 +185,7 @@ function start() {
 
   vertices = createVertices();
   // Create the object
-  objects.push(new Mesh(gl, program, vertices, [-COLS/2, 0, -ROWS/2]));
+  objects.push(new Mesh(gl, program, vertices, [-COLS*SPACING/2, 0, -ROWS*SPACING/2]));
   // Draw it
   render();
   console.log('Finished');
