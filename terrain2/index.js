@@ -14,8 +14,7 @@ let CAMERA_LOOK = [0, 0, 0];
 let PAUSE = false;
 let CLEAR_COLOR = [0, 0, 0.5, 1.0];
 
-
-
+let vertices; // 2D array of vertices
 let gl;
 let dt = 1;
 let lastTime = Date.now();
@@ -54,43 +53,92 @@ function update() {
 
   for (var object of objects) {
     object.update(dt, currTime);
+    object.normals = calculateNormals(object.vertices);
   }
 }
 
-function setupGeo(gl, shader) {
+function createVertices() {
   let vertices = []
   for (let i = 0; i < ROWS; i++) {
     for (let j = 0; j < COLS; j++) {
-      // Vertex1
       vertices.push(j);
       vertices.push(0);
       vertices.push(i);
-
-      // Vertex2
-      vertices.push(j);
-      vertices.push(0);
-      vertices.push(i + 1);
-
-      // Insert 2 degenerate tris
-      if (j == COLS - 1) {
-        vertices.push(j);
-        vertices.push(0);
-        vertices.push(i + 1);
-
-        vertices.push(0);
-        vertices.push(0);
-        vertices.push(i + 1);
-      }
     }
   }
+  return vertices;
+}
 
-  objects.push(new Mesh(gl, program, vertices, [-COLS/2, 0, -ROWS/2]));
+function vertexFromIndex(index, vertices) {
+  return [vertices[index], vertices[index+1], vertices[index+2]];
+}
+
+// TODO: This should be able to take an array
+function getNormalForTri(v1, v2, v3) {
+  let s1 = vec3.create();
+  let s2 = vec3.create();
+  let c1 = vec3.create();
+
+  vec3.set(s1, v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]);
+  vec3.set(s2, v3[0] - v2[0], v3[1] - v2[1], v3[2] - v2[2]);
+  vec3.cross(c1, s1, s2);
+  return c1;
 }
 
 function calculateNormals(vertices) {
-  for (let i = 0; i < vertices.length; i += 3) {
+  let v1 = vec3.create();
+  let v2 = vec3.create();
+  let v3 = vec3.create();
 
+  function getIndex(row, col) {
+    return row * COLS + (col * 3);
   }
+
+  let normals = []
+
+  for (let i = 0; i < ROWS; i++) {
+    for (let j = 0; j < COLS; j++) {
+      // Hack to not deal w/edge cases yet
+      if (i == 0 || i == ROWS - 1 || j == 0 || j == COLS - 1) {
+        normals.push(0);
+        normals.push(0);
+        normals.push(0);
+        continue;
+      }
+
+      let i1 = getIndex(i, j-1);
+      let i2 = getIndex(i, j);
+      let i3 = getIndex(i-1, j);     
+
+      let i4 = getIndex(i-1, j);
+      let i5 = getIndex(i, j);
+      let i6 = getIndex(i, j+1);
+
+      let i7 = getIndex(i, j-1);
+      let i8 = getIndex(i+1, j);
+      let i9 = getIndex(i, j);
+
+      let i10 = getIndex(i, j);
+      let i11 = getIndex(i+1, j);
+      let i12 = getIndex(i, j+1);
+      
+      let n1 = getNormalForTri(vertexFromIndex(i1, vertices), vertexFromIndex(i2, vertices), vertexFromIndex(i3, vertices));
+      let n2 = getNormalForTri(vertexFromIndex(i4, vertices), vertexFromIndex(i5, vertices), vertexFromIndex(i6, vertices));
+      let n3 = getNormalForTri(vertexFromIndex(i7, vertices), vertexFromIndex(i8, vertices), vertexFromIndex(i9, vertices));
+      let n4 = getNormalForTri(vertexFromIndex(i10, vertices), vertexFromIndex(i11, vertices), vertexFromIndex(i12, vertices));
+
+      vec3.lerp(v1, n1, n2, 0.5);
+      vec3.lerp(v2, n3, n4, 0.5);
+      vec3.lerp(v3, v1, v2, 0.5);
+      vec3.normalize(v3, v3);
+
+      normals.push(v3[0]);
+      normals.push(v3[1]);
+      normals.push(v3[2]);
+    }
+  }
+
+  return normals;
 }
 
 function start() {
@@ -132,8 +180,9 @@ function start() {
 
   setupHandlers();
 
-  setupGeo(gl, program);
-
+  vertices = createVertices();
+  // Create the object
+  objects.push(new Mesh(gl, program, vertices, [-COLS/2, 0, -ROWS/2]));
   // Draw it
   render();
   console.log('Finished');
