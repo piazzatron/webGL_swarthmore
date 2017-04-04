@@ -4,10 +4,10 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 200;
-const COLS = 200;
+const ROWS = 150;
+const COLS = 150;
 const HEIGHT = 2;
-const SPACING = 3;
+const SPACING = 0.3
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -130,6 +130,7 @@ function calculateNormals(vertices) {
       let n3 = getNormalForTri(vertexFromIndex(i7, vertices), vertexFromIndex(i8, vertices), vertexFromIndex(i9, vertices));
       let n4 = getNormalForTri(vertexFromIndex(i10, vertices), vertexFromIndex(i11, vertices), vertexFromIndex(i12, vertices));
 
+      // TODO: Fix
       vec3.lerp(v1, n1, n2, 0.5);
       vec3.lerp(v2, n3, n4, 0.5);
       vec3.lerp(v3, v1, v2, 0.5);
