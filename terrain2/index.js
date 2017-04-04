@@ -4,10 +4,10 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 150;
-const COLS = 150;
+const ROWS = 200;
+const COLS = 200;
 const HEIGHT = 2;
-const SPACING = 0.3
+const SPACING = 3;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
