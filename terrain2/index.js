@@ -4,10 +4,10 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 150;
-const COLS = 150;
+const ROWS = 100;
+const COLS = 100;
 const HEIGHT = 2;
-const SPACING = 0.3
+const SPACING = 1
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -62,12 +62,35 @@ function update() {
 
 function createVertices() {
   let vertices = []
-  for (let i = 0; i < ROWS; i++) {
-    for (let j = 0; j < COLS; j++) {
-      vertices.push(j * SPACING);
-      vertices.push(0);
-      vertices.push(i * SPACING);
+  if (SMOOTH_SHADING){
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        vertices.push(j * SPACING);
+        vertices.push(0);
+        vertices.push(i * SPACING);
+      }
     }
+  } else {
+    let triangles = []
+    for (let i = 0; i < ROWS - 1; i++) {
+      for (let j = 0; j < COLS - 1; j++) {
+        let triangle1 = [
+          j*SPACING, 0, i*SPACING,
+          j*SPACING, 0, (i+1)*SPACING,
+          (j+1)*SPACING, 0, i*SPACING
+        ];
+
+        let triangle2 = [
+          (j+1)*SPACING, 0, i*SPACING,
+          j*SPACING, 0, (i+1)*SPACING,
+          (j+1)*SPACING, 0, (i+1)*SPACING
+        ];
+        triangles.push(triangle1);
+        triangles.push(triangle2);
+
+      }
+    }
+    vertices = [].concat.apply([], triangles);
   }
   return vertices;
 }
@@ -90,16 +113,15 @@ function getNormalForTri(v1, v2, v3) {
 }
 
 function calculateNormals(vertices) {
+  function getIndex(row, col) {
+      return row * (COLS) * 3 + (col * 3);
+  }
+  let normals = [];
+
   if (SMOOTH_SHADING) {
     let v1 = vec3.create();
     let v2 = vec3.create();
     let v3 = vec3.create();
-
-    function getIndex(row, col) {
-      return row * (COLS) * 3 + (col * 3);
-    }
-
-    let normals = []
 
     for (let i = 0; i < ROWS; i++) {
       for (let j = 0; j < COLS; j++) {
@@ -143,10 +165,20 @@ function calculateNormals(vertices) {
         normals.push(v3[2]);
       } 
     }
-    return normals;
   } else {
-
+    for (let i = 0; i < vertices.length; i+=9) {
+      let v1 = [vertices[i], vertices[i+1], vertices[i+2]];
+      let v2 = [vertices[i+3], vertices[i+4], vertices[i+5]];
+      let v3 = [vertices[i+6], vertices[i+7], vertices[i+8]];
+      let n1 = getNormalForTri(v1, v2, v3);
+      for (let j = 0; j < 9; j++) {
+        normals.push(n1[0])
+        normals.push(n1[1])
+        normals.push(n1[2])
+      }
+    }
   }
+  return normals;
 }
 
 function start() {

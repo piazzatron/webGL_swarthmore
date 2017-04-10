@@ -46,10 +46,10 @@ class Drawable {
     gl.vertexAttribPointer(this.attrs[0], 3, gl.FLOAT, false, 0, 0);
 
     // Bind the normals array
-    // gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.DYNAMIC_DRAW);
-    // gl.enableVertexAttribArray(this.attrs[1]);
-    // gl.vertexAttribPointer(this.attrs[1], 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(this.attrs[1]);
+    gl.vertexAttribPointer(this.attrs[1], 3, gl.FLOAT, false, 0, 0);
 
     // Bind the element array
     // TODO: Don't create a new array each time
@@ -119,21 +119,18 @@ class Mesh extends Drawable {
         }
       }
     } else {
-      for (let i = 0; i < ROWS-1; i++) {
-        for (let j = 0; j < COLS; j++) {
-          // first tri
-          els.push(i*COLS+j);
-          els.push(i*(COLS+1)+j);
-          els.push(i*COLS+j+1);
-
-          //second tri
-          els.push(i*COLS+j+1);
-          els.push(i*(COLS+1)+j);
-          els.push(i*(COLS+1)+j+1);
+      let count = 0
+      for (let i = 0; i < ROWS - 1; i++) {
+        for (let j = 0; j < COLS - 1; j++) {
+          els.push(count++);
+          els.push(count++);
+          els.push(count++);
+          els.push(count++);
+          els.push(count++);
+          els.push(count++);
         }
       }
     }
-
 
     this.elements = els;
     this.color = vec4.create();
@@ -143,7 +140,7 @@ class Mesh extends Drawable {
   draw(gl, camera) {
     // Set uniforms
     
-    const primitive = (SMOOTH_SHADING) ? gl.TRIANGLE_STRIP : gl.TRIANGLE;
+    const primitive = (SMOOTH_SHADING) ? gl.TRIANGLE_STRIP : gl.TRIANGLES;
 
     super.draw(gl, camera, primitive);
   }
