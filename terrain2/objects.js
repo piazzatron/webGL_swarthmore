@@ -46,10 +46,10 @@ class Drawable {
     gl.vertexAttribPointer(this.attrs[0], 3, gl.FLOAT, false, 0, 0);
 
     // Bind the normals array
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(this.attrs[1]);
-    gl.vertexAttribPointer(this.attrs[1], 3, gl.FLOAT, false, 0, 0);
+    // gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.DYNAMIC_DRAW);
+    // gl.enableVertexAttribArray(this.attrs[1]);
+    // gl.vertexAttribPointer(this.attrs[1], 3, gl.FLOAT, false, 0, 0);
 
     // Bind the element array
     // TODO: Don't create a new array each time
@@ -106,17 +106,35 @@ class Mesh extends Drawable {
 
     // Set up elements array
     let els = [];
-    for (let i = 0; i < ROWS-1; i++) {
-      for (let j = 0; j < COLS; j++) {
-        els.push((i*COLS) + j);
-        els.push(((i+1)*COLS) + j);
-
-        if (j == COLS-1) {
+    if (SMOOTH_SHADING) {
+      for (let i = 0; i < ROWS-1; i++) {
+        for (let j = 0; j < COLS; j++) {
+          els.push((i*COLS) + j);
           els.push(((i+1)*COLS) + j);
-          els.push((i+1)*COLS);
+
+          if (j == COLS-1) {
+            els.push(((i+1)*COLS) + j);
+            els.push((i+1)*COLS);
+          }
+        }
+      }
+    } else {
+      for (let i = 0; i < ROWS-1; i++) {
+        for (let j = 0; j < COLS; j++) {
+          // first tri
+          els.push(i*COLS+j);
+          els.push(i*(COLS+1)+j);
+          els.push(i*COLS+j+1);
+
+          //second tri
+          els.push(i*COLS+j+1);
+          els.push(i*(COLS+1)+j);
+          els.push(i*(COLS+1)+j+1);
         }
       }
     }
+
+
     this.elements = els;
     this.color = vec4.create();
     vec4.set(this.color, color[0], color[1], color[2], color[3]);
@@ -124,7 +142,8 @@ class Mesh extends Drawable {
 
   draw(gl, camera) {
     // Set uniforms
-    const primitive = gl.TRIANGLE_STRIP;
+    
+    const primitive = (SMOOTH_SHADING) ? gl.TRIANGLE_STRIP : gl.TRIANGLE;
 
     super.draw(gl, camera, primitive);
   }
