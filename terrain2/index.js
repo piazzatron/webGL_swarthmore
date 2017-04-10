@@ -4,8 +4,8 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 50;
-const COLS = 50;
+const ROWS = 80;
+const COLS = 80;
 const HEIGHT = 2;
 const SPACING = 1
 
@@ -87,7 +87,6 @@ function createVertices() {
         ];
         triangles.push(triangle1);
         triangles.push(triangle2);
-
       }
     }
     vertices = [].concat.apply([], triangles);
@@ -170,8 +169,8 @@ function calculateNormals(vertices) {
       let v1 = [vertices[i], vertices[i+1], vertices[i+2]];
       let v2 = [vertices[i+3], vertices[i+4], vertices[i+5]];
       let v3 = [vertices[i+6], vertices[i+7], vertices[i+8]];
-      let n1 = getNormalForTri(v1, v2, v3);
-      for (let j = 0; j < 9; j++) {
+      let n1 = getNormalForTri(v3, v1, v2);
+      for (let j = 0; j < 3; j++) {
         normals.push(n1[0])
         normals.push(n1[1])
         normals.push(n1[2])
