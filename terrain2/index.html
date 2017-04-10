@@ -64,7 +64,7 @@
 			// Not sure if the lightVector is pointing the right way...
 			v_color = (AMBIENT * ambient) + (DIFFUSE * diffuse) + (SPECULAR * specular);
 			v_color = clamp(v_color, vec4(0,0,0,0), vec4(1, 1, 1, 1));
-			// v_color = vec4(a_normal.xyz, 1);
+			v_color = vec4(a_normal.xyz, 1);
 
 			gl_Position = u_pMatrix * mvMatrix * a_posHomog;
 			v_position = gl_Position;

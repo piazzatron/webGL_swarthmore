@@ -4,8 +4,8 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 100;
-const COLS = 100;
+const ROWS = 50;
+const COLS = 50;
 const HEIGHT = 2;
 const SPACING = 1
 
