@@ -141,7 +141,7 @@ function calculateNormals(vertices) {
         normals.push(v3[0]);
         normals.push(v3[1]);
         normals.push(v3[2]);
-      }
+      } 
     }
     return normals;
   } else {
