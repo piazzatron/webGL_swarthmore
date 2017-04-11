@@ -152,7 +152,7 @@ class Mesh extends Drawable {
 
   updateHeights(dt, offset) {
     for (let i = 0; i < this.vertices.length; i+=3) {
-      this.vertices[i+1] = HEIGHT * Math.sin(this.vertices[i] + offset) * Math.cos(this.vertices[i+2] + offset);
+      this.vertices[i+1] = HEIGHT * Math.sin(this.vertices[i]) * Math.cos(this.vertices[i+2] - offset);
     }
   }
 }
@@ -174,6 +174,7 @@ class Camera {
   }
 
   getCameraMatrix() {
+
     // TODO: Optimization: if we didn't update last tick, then just return the prev matrix 
     let x_dir = vec3.create();
     let y_dir = vec3.create();
@@ -182,6 +183,7 @@ class Camera {
     vec3.sub(z_dir, this.position, this.lookAt); // Opposite of what you would imagine
     vec3.cross(x_dir, this.up, z_dir);
     vec3.cross(y_dir, z_dir, x_dir);
+    console.log(z_dir)
 
     vec3.normalize(x_dir, x_dir);
     vec3.normalize(y_dir, y_dir);

@@ -13,10 +13,10 @@
 		attribute vec3 a_position;
 		attribute vec3 a_normal;
 
-		float DIFFUSE = 1.0;
+		float DIFFUSE = 0.5;
 		float AMBIENT = 1.0;
-		float SPECULAR = 1.0;
-		float SHININESS = 4.0;
+		float SPECULAR = 0.5;
+		float SHININESS = 10.0;
 
 		uniform mat4 u_mMatrix;
 		uniform mat4 u_vMatrix;
@@ -85,7 +85,7 @@
 
 </head>
 	<body onload="start()">
-		<canvas id="glCanvas" width="640" height="480">
+		<canvas id="glCanvas" width="1024" height="768">
 		</canvas>
 		<canvas id="text"></canvas>
 	</body>

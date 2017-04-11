@@ -7,7 +7,7 @@ const FAR = 200;
 const ROWS = 80;
 const COLS = 80;
 const HEIGHT = 2;
-const SPACING = 1
+const SPACING = 10
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
@@ -31,6 +31,9 @@ let objects = [];
 let lines = [];
 let pMatrix = mat4.create();
 let sMatrix = mat4.create();
+let s1 = vec3.create();
+let s2 = vec3.create();
+let c1 = vec3.create();
 
 function draw() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -55,7 +58,7 @@ function update() {
   camera.update();
 
   for (var object of objects) {
-    object.update(dt, currTime);
+    object.update(dt, currTime * 2);
     object.normals = calculateNormals(object.vertices);
   }
 }
@@ -100,10 +103,6 @@ function vertexFromIndex(index, vertices) {
 
 // TODO: This should be able to take an array
 function getNormalForTri(v1, v2, v3) {
-  let s1 = vec3.create();
-  let s2 = vec3.create();
-  let c1 = vec3.create();
-
   vec3.set(s1, v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]);
   vec3.set(s2, v3[0] - v2[0], v3[1] - v2[1], v3[2] - v2[2]);
   vec3.cross(c1, s1, s2);
