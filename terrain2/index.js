@@ -4,14 +4,14 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 80;
-const COLS = 80;
+const ROWS = 20;
+const COLS = 20;
 const HEIGHT = 2;
-const SPACING = 10
+const SPACING = 0.2;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
-let CAMERA_TRANSLATION = [0, 0, 5];
+let CAMERA_TRANSLATION = [0, 0, 0.5];
 let CAMERA_LOOK = [0, 0, 0];
 let PAUSE = false;
 let CLEAR_COLOR = [0, 0, 0.5, 1.0];
@@ -58,7 +58,7 @@ function update() {
   camera.update();
 
   for (var object of objects) {
-    object.update(dt, currTime * 2);
+    object.update(dt, currTime*2);
     object.normals = calculateNormals(object.vertices);
   }
 }
@@ -168,7 +168,7 @@ function calculateNormals(vertices) {
       let v1 = [vertices[i], vertices[i+1], vertices[i+2]];
       let v2 = [vertices[i+3], vertices[i+4], vertices[i+5]];
       let v3 = [vertices[i+6], vertices[i+7], vertices[i+8]];
-      let n1 = getNormalForTri(v3, v1, v2);
+      let n1 = getNormalForTri(v1, v2, v3);
       for (let j = 0; j < 3; j++) {
         normals.push(n1[0])
         normals.push(n1[1])
@@ -295,7 +295,7 @@ function mouseHandler(ev) {
   theta *= (Math.PI / 2);
   phi *= (Math.PI / 2);
 
-  camera.position[0] = Math.sin(theta) * Math.cos(phi) * 3.0;
-  camera.position[1] = Math.sin(phi) * 3.0;
-  camera.position[2] = Math.cos(theta) * Math.cos(phi) * 3.0;
+  camera.position[0] = Math.sin(theta) * Math.cos(phi) * CAMERA_TRANSLATION[2];
+  camera.position[1] = Math.sin(phi) * CAMERA_TRANSLATION[2];
+  camera.position[2] = Math.cos(theta) * Math.cos(phi) * CAMERA_TRANSLATION[2];
 }
