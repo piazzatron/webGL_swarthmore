@@ -4,14 +4,14 @@ const SCALE = 1;
 const FOV = 45;
 const NEAR = 0.01;
 const FAR = 200;
-const ROWS = 20;
+const ROWS = 120;
 const COLS = 20;
 const HEIGHT = 2;
-const SPACING = 0.2;
+const SPACING = 0.5;
 
 let DRAW_NORMALS = true;
 let ROTATION_SPEED = 0.0;
-let CAMERA_TRANSLATION = [0, 0, 0.5];
+let CAMERA_TRANSLATION = [0, 0, 15];
 let CAMERA_LOOK = [0, 0, 0];
 let PAUSE = false;
 let CLEAR_COLOR = [0, 0, 0.5, 1.0];
@@ -58,7 +58,7 @@ function update() {
   camera.update();
 
   for (var object of objects) {
-    object.update(dt, currTime*2);
+    object.update(dt, currTime*0.5);
     object.normals = calculateNormals(object.vertices);
   }
 }
@@ -221,6 +221,7 @@ function start() {
   vertices = createVertices();
   // Create the object
   objects.push(new Mesh(gl, program, vertices, [-COLS*SPACING/2, 0, -ROWS*SPACING/2]));
+  // objects.push(new Mesh(gl, program, vertices, [-COLS*SPACING/2 + COLS*SPACING, 0, -ROWS*SPACING/2]));
   // Draw it
   render();
   console.log('Finished');

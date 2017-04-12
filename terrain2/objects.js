@@ -2,7 +2,7 @@
 'use strict';
 
 class Drawable {
-  constructor(gl, shader, vertices, normals, position = [0, 0, 0], rotation = [0, 0, 0], velocity = [0, 0, 0]) {
+  constructor(gl, shader, vertices, normals, position = [0, 0, 0], rotation = [0, 0, 0], velocity = [0, 0, 0], scale = [1,1,1]) {
     this.shader = shader;
     this.elements = [] // [px, py, pz, color1, color2, color3, nx, ny, nz...]
     this.vertices = vertices;
@@ -19,6 +19,7 @@ class Drawable {
     this.position = vec3.create();
     this.rotation = vec3.create();
     this.velocity = vec3.create();
+    this.scale = vec3.create();
     this.scaledVelocity = vec3.create();
     this.acceleration = vec3.create();
     this.modelMatrix = mat4.create();
@@ -26,7 +27,8 @@ class Drawable {
  
     vec3.set(this.position, position[0], position[1], position[2]);
     vec3.set(this.rotation, rotation[0], rotation[1], rotation[2]);
-    vec3.set(this.velocity, velocity[0], velocity[1], velocity[2]);
+    vec3.set(this.velocity, velocity[0] , velocity[1], velocity[2]);
+    vec3.set(this.scale, scale[0], scale[1], scale[2]);
   }
 
   getAttrLocations(shader, attr_strings) {
@@ -60,11 +62,11 @@ class Drawable {
     // TODO: We're creating these objects for every particle...
     let viewMatrix = camera.getCameraMatrix();
 
-    mat4.fromScaling(this.modelMatrix, [0.1, 0.1, 0.1]);
-    mat4.translate(this.modelMatrix, this.modelMatrix, this.position);
+    mat4.fromTranslation(this.modelMatrix, this.position);
     mat4.rotateX(this.modelMatrix, this.modelMatrix, this.rotation[0]);
     mat4.rotateY(this.modelMatrix, this.modelMatrix, this.rotation[1]);
     mat4.rotateZ(this.modelMatrix, this.modelMatrix, this.rotation[2]);
+    mat4.scale(this.modelMatrix, this.modelMatrix, this.scale);
 
     gl.uniformMatrix4fv(this.u_mMatrix, false, this.modelMatrix);
     gl.uniformMatrix4fv(this.u_vMatrix, false, viewMatrix);
@@ -141,8 +143,40 @@ class Mesh extends Drawable {
     // Set uniforms
     
     const primitive = (SMOOTH_SHADING) ? gl.TRIANGLE_STRIP : gl.TRIANGLES;
+    let dups = 10;
 
-    super.draw(gl, camera, primitive);
+    // X
+    for (let i = 0; i < dups; i++) {
+      this.position[0] = -1*COLS*SPACING/2
+
+      // Even - stuff on right side
+      if (i % 2 == 0) {
+
+        // Scoot right
+        if (this.scale[0] == -1) {
+          // If flipped, add one extra
+          this.position[0] += (COLS-1) * SPACING * (i/2 + 1);
+        } else {
+          this.position[0] += (COLS-1) * SPACING * (i/2);
+        }
+      }
+
+      // ODD - stuff on left
+      else {
+        this.scale[0] *= -1;
+
+        if (this.scale[0] == -1) {
+          this.position[0] -= (COLS-1) * SPACING * ((i+1)/2 - 1);
+        } else {
+          this.position[0] -= (COLS-1) * SPACING * ((i+1)/2);
+        }
+      }
+      
+      super.draw(gl, camera, primitive);
+    } 
+
+    this.position[0] = -1 * COLS * SPACING / 2;
+    this.scale[0] = 1;
   }
 
   update(dt, offset) {
