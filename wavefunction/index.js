@@ -10,9 +10,19 @@ let FAIL = false;
 let MAX_FAILS = 300;
 let tiles = [];
 let grid = [[]];
-let TILE_SIZE = 20;
-let NUM_COLS = 50;
-let NUM_ROWS = 50;
+let INPUT_SIZE = 50;
+let TILE_SIZE = 10;
+let CANVAS_SIZE = 300;
+let NUM_TILES = CANVAS_SIZE/TILE_SIZE;
+let STRIDE = 3;
+let img;
+let tile_map = {
+  top: {},
+  left: {},
+  right: {},
+  bottom: {}
+}
+let lefts = [];
 
 Set.prototype.intersection = function(setB) {
     var intersection = new Set();
@@ -36,93 +46,98 @@ let Tile = function(image, label) {
 };
 
 function setup() {
+  noLoop();
   frameRate(60);
   strokeWeight(4);
   stroke(0, 255, 200);
 
-  WIDTH = TILE_SIZE * NUM_COLS;
-  HEIGHT = TILE_SIZE * NUM_ROWS;
-  createCanvas(WIDTH, HEIGHT);
+  createCanvas(CANVAS_SIZE, CANVAS_SIZE);
 
-  let t = createGraphics(TILE_SIZE, TILE_SIZE);
-  t.ellipse(TILE_SIZE, 0, TILE_SIZE);
-  let A = new Tile(t, 'A');
+  /****************** GET SUBIMAGES *******************/
+  img = loadImage('images/flowa.png',() => {
+    console.log("success");
+    image(img, 0, 0);
 
-  t = createGraphics(TILE_SIZE, TILE_SIZE);
-  t.ellipse(0, TILE_SIZE, TILE_SIZE);
-  let B = new Tile(t, 'B');
+    console.log ("Breaking images into tiles...");
+    for (let i = 0; i < INPUT_SIZE - TILE_SIZE; i+=STRIDE) {
+      for (let j = 0; j < INPUT_SIZE - TILE_SIZE; j+=STRIDE) {
+        console.log(i, j);
+        let tile = get(i, j, TILE_SIZE, TILE_SIZE);
+        let tileNum = tiles.length;
 
-  t = createGraphics(TILE_SIZE, TILE_SIZE);
-  t.line(TILE_SIZE/2, 0, TILE_SIZE/2, TILE_SIZE);
-  let C = new Tile(t, 'C');
-  tiles.push(t);
+        tile.loadPixels();
+        tiles.push(tile);
 
-  t = createGraphics(TILE_SIZE, TILE_SIZE);
-  t.line(0, TILE_SIZE/2, TILE_SIZE, TILE_SIZE/2);
-  let D = new Tile(t, 'D');
+        let top = tile.get(0, 0, TILE_SIZE, 1);
+        top.loadPixels();
+        let top_hash = String(top.pixels);
 
-  t = createGraphics(TILE_SIZE, TILE_SIZE);
-  let E = new Tile(t, 'E');
-  
-  t = createGraphics(TILE_SIZE, TILE_SIZE);
-  t.ellipse(0, 0, TILE_SIZE);
-  let F = new Tile(t, 'F');
+        let bottom = tile.get(0, TILE_SIZE - 1, TILE_SIZE, 1);
+        bottom.loadPixels();
+        let bottom_hash = String(bottom.pixels);
 
-  t = createGraphics(TILE_SIZE, TILE_SIZE);
-  t.ellipse(TILE_SIZE, TILE_SIZE, TILE_SIZE);
-  let G = new Tile(t, 'G');
+        let left = tile.get(0, 0, 1, TILE_SIZE);
+        left.loadPixels();
+        let left_hash = String(left.pixels);
 
-  A.neighbors.up = new Set([B, C, F, G]);
-  A.neighbors.left = new Set([B, C, E, F]);
-  A.neighbors.right = new Set([B, D, F]);
-  A.neighbors.down = new Set([B, D, E, G]);
+        let right = tile.get(0, TILE_SIZE - 1, TILE_SIZE, 1);
+        right.loadPixels();
+        let right_hash = String(right.pixels);
 
-  B.neighbors.up = new Set([A, D, E]);
-  B.neighbors.left = new Set([A, D, G]);
-  B.neighbors.right = new Set([A, C, E, G]);
-  B.neighbors.down = new Set([A, C, F]);  
+        // Dumb little test
+        lefts.push(left);
 
-  C.neighbors.up = new Set([B, C, G]);
-  C.neighbors.left = new Set([B, C, E, F]);
-  C.neighbors.right = new Set([C, A, E, G]);
-  C.neighbors.down = new Set([C, A, F]);  
+        // Need to consider the case when the image is a repeat tile, and increment counts
+        
+        // Hash the edges
+        if (!tile_map.top[top_hash]) {
+          tile_map.top[top_hash] = [tileNum];
+        } else {
+          tile_map.top[top_hash].push(tileNum);
+        }        
 
-  D.neighbors.up = new Set([A, D, E, F]);
-  D.neighbors.left = new Set([A, D, G]);
-  D.neighbors.right = new Set([B, D, F]);
-  D.neighbors.down = new Set([B, D, E, G]);
+        if (!tile_map.left[left_hash]) {
+          tile_map.left[left_hash] = [tileNum];
+        } else {
+          tile_map.left[left_hash].push(tileNum);
+        }
 
-  E.neighbors.up = new Set([A, D, F]);
-  E.neighbors.left = new Set([B, C, F]);
-  E.neighbors.right = new Set([A, C, G]);
-  E.neighbors.down = new Set([B, D, G]);
+        if (!tile_map.right[right_hash]) {
+          tile_map.right[right_hash] = [tileNum];
+        } else {
+          tile_map.right[right_hash].push(tileNum);
+        }
 
-  F.neighbors.up = new Set([B, C, G]);
-  F.neighbors.left = new Set([A, D, G]);
-  F.neighbors.right = new Set([A, C, E, G]);
-  F.neighbors.down = new Set([B, D, E, G]);
+        if (!tile_map.bottom[bottom_hash]) {
+          tile_map.bottom[bottom_hash] = [tileNum];
+        } else {
+          tile_map.bottom[bottom_hash].push(tileNum);
+        }
 
-  G.neighbors.up = new Set([A, D, E, F]);
-  G.neighbors.left = new Set([B, C, E, F]);
-  G.neighbors.right = new Set([B, D, F]);
-  G.neighbors.down = new Set([A, C, F]);
+        console.log("Preprocessed an image!");
+      }
+    }
 
-  tiles = [A, B, C, D, F];
+    loop(); // kickoff drawing
+  }, () => {console.log("FAIL");}
+  );
 }
 
 function makeCell() {
   let possibles;
 
   // TOP LEFT CORNER
-  if (i === 0 && j === 0) {
-    possibles = tiles;
-  } else if (i === 0 && j !== 0) {
-    possibles = Array.from(grid[0][j-1].neighbors.right);
-  } else if (j === 0 && i !== 0) {
-    possibles = Array.from(grid[i-1][0].neighbors.down);
-  } else {
-    possibles = Array.from(grid[i-1][j].neighbors.down.intersection(grid[i][j-1].neighbors.right));
-  }
+  possibles = tiles;
+  
+  // if (i === 0 && j === 0) {
+  //   possibles = tiles;
+  // } else if (i === 0 && j !== 0) {
+  //   possibles = Array.from(grid[0][j-1].neighbors.right);
+  // } else if (j === 0 && i !== 0) {
+  //   possibles = Array.from(grid[i-1][0].neighbors.down);
+  // } else {
+  //   possibles = Array.from(grid[i-1][j].neighbors.down.intersection(grid[i][j-1].neighbors.right));
+  // }
 
   if (!possibles.length) {
     console.log('Got stuck');
@@ -137,10 +152,19 @@ function makeCell() {
 }
 
 function draw() {
-  if (i < NUM_ROWS) {
-    if (j < NUM_COLS) {
+  // for (let i = 0; i < lefts.length; i++) {
+  //   console.log("DRAWING IMAGE!")
+  //   image(lefts[i], (i * 15) % WIDTH, Math.floor((i*15)/WIDTH) * 15);
+
+  //   if (i == lefts.length - 1) {
+  //     noLoop();
+  //   }
+  // }
+
+  if (i < NUM_TILES) {
+    if (j < NUM_TILES) {
       if (makeCell()) {
-        image(grid[i][j].image, j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        image(grid[i * NUM_TILES + j], j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         j += 1;
       } else {
         i = 0;

@@ -1,0 +1,9 @@
+Pick and load up a stock image
+Break it into window sized images
+Preprocess them based on edges
+Load those edges into the existing program
+
+distribution placement
+distribution w/entropy
+
+drawing code
