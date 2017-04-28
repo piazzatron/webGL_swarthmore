@@ -11,8 +11,8 @@ let MAX_FAILS = 300;
 let tiles = [];
 let grid = [[]];
 let TILE_SIZE = 20;
-let NUM_COLS = 20;
-let NUM_ROWS = 20;
+let NUM_COLS = 50;
+let NUM_ROWS = 50;
 
 Set.prototype.intersection = function(setB) {
     var intersection = new Set();
@@ -107,7 +107,7 @@ function setup() {
   G.neighbors.right = new Set([B, D, F]);
   G.neighbors.down = new Set([A, C, F]);
 
-  tiles = [A, B, C, D, E, F, G];
+  tiles = [A, B, C, D, F];
 }
 
 function makeCell() {
