@@ -1,8 +1,11 @@
 TODO:
+	Change ordering of stuff
+	Pull out sphere geo as it's own class
+	Make an update function
 	Get object drawing working
 	Get orbit cam working
 
-	
+
 	Make some code that compiles the shaders nicely
 	Make some code that deals with uniforms and positions/locations
 	Add color & position to objects

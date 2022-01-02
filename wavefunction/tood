@@ -7,3 +7,11 @@ distribution placement
 distribution w/entropy
 
 drawing code
+
+Need:
+	Counts array
+	tile_hash -> index (for killing duplicates)
+	tiles array = //{image, hash, top, bottom, etc}
+
+	we pull the tile from tiles:
+		look at 
